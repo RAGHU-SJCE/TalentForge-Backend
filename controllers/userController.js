@@ -1,11 +1,13 @@
 const User = require("../models/User");
 
+// =====================================
 // Get Profile
+// =====================================
 const getProfile = async (req, res) => {
   try {
-    const user = await User.findById(req.user.id).select(
-      "-password"
-    );
+    const user = await User.findById(
+      req.user.id
+    ).select("-password");
 
     res.status(200).json({
       success: true,
@@ -19,29 +21,38 @@ const getProfile = async (req, res) => {
   }
 };
 
+// =====================================
 // Upload Resume
+// =====================================
 const uploadResume = async (req, res) => {
   try {
     if (!req.file) {
       return res.status(400).json({
         success: false,
-        message: "Please upload a resume",
+        message:
+          "Please upload a resume",
       });
     }
 
-    const user = await User.findByIdAndUpdate(
-      req.user.id,
-      {
-        resume: req.file.path,
-      },
-      {
-        new: true,
-      }
-    ).select("-password");
+    const resumePath =
+      "/uploads/resumes/" +
+      req.file.filename;
+
+    const user =
+      await User.findByIdAndUpdate(
+        req.user.id,
+        {
+          resume: resumePath,
+        },
+        {
+          new: true,
+        }
+      ).select("-password");
 
     res.status(200).json({
       success: true,
-      message: "Resume uploaded successfully",
+      message:
+        "Resume uploaded successfully",
       resume: user.resume,
       user,
     });
@@ -53,20 +64,28 @@ const uploadResume = async (req, res) => {
   }
 };
 
+// =====================================
 // Update Skills
+// =====================================
 const updateSkills = async (req, res) => {
   try {
     const { skills } = req.body;
 
-    const user = await User.findByIdAndUpdate(
-      req.user.id,
-      { skills },
-      { new: true }
-    ).select("-password");
+    const user =
+      await User.findByIdAndUpdate(
+        req.user.id,
+        {
+          skills,
+        },
+        {
+          new: true,
+        }
+      ).select("-password");
 
     res.status(200).json({
       success: true,
-      message: "Skills Updated Successfully",
+      message:
+        "Skills Updated Successfully",
       user,
     });
   } catch (error) {
@@ -77,20 +96,28 @@ const updateSkills = async (req, res) => {
   }
 };
 
+// =====================================
 // Update Bio
+// =====================================
 const updateBio = async (req, res) => {
   try {
     const { bio } = req.body;
 
-    const user = await User.findByIdAndUpdate(
-      req.user.id,
-      { bio },
-      { new: true }
-    ).select("-password");
+    const user =
+      await User.findByIdAndUpdate(
+        req.user.id,
+        {
+          bio,
+        },
+        {
+          new: true,
+        }
+      ).select("-password");
 
     res.status(200).json({
       success: true,
-      message: "Bio Updated Successfully",
+      message:
+        "Bio Updated Successfully",
       user,
     });
   } catch (error) {
@@ -101,7 +128,9 @@ const updateBio = async (req, res) => {
   }
 };
 
+// =====================================
 // Get All Students
+// =====================================
 const getAllStudents = async (req, res) => {
   try {
     const { skill } = req.query;
@@ -116,9 +145,10 @@ const getAllStudents = async (req, res) => {
       };
     }
 
-    const students = await User.find(filter).select(
-      "-password"
-    );
+    const students =
+      await User.find(filter).select(
+        "-password"
+      );
 
     res.status(200).json({
       success: true,
@@ -133,12 +163,18 @@ const getAllStudents = async (req, res) => {
   }
 };
 
+// =====================================
 // Get Student By ID
-const getStudentById = async (req, res) => {
+// =====================================
+const getStudentById = async (
+  req,
+  res
+) => {
   try {
-    const student = await User.findById(
-      req.params.id
-    ).select("-password");
+    const student =
+      await User.findById(
+        req.params.id
+      ).select("-password");
 
     if (!student) {
       return res.status(404).json({

@@ -19,6 +19,17 @@ const savedJobSchema = new mongoose.Schema(
   }
 );
 
+// Prevent duplicate saves
+savedJobSchema.index(
+  {
+    student: 1,
+    job: 1,
+  },
+  {
+    unique: true,
+  }
+);
+
 module.exports = mongoose.model(
   "SavedJob",
   savedJobSchema

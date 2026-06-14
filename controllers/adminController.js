@@ -2,6 +2,8 @@ const User = require("../models/User");
 const Job = require("../models/Job");
 const Project = require("../models/Project");
 const Application = require("../models/Application");
+const Notification = require("../models/Notification");
+const SavedJob = require("../models/SavedJob");
 
 
 // ====================================
@@ -28,7 +30,7 @@ const getAllUsers = async (req, res) => {
 
 
 // ====================================
-// Delete User
+// Delete User + Cascade Cleanup
 // ====================================
 const deleteUser = async (req, res) => {
   try {
@@ -43,11 +45,72 @@ const deleteUser = async (req, res) => {
       });
     }
 
+    // ====================================
+    // Delete Student Related Data
+    // ====================================
+
+    await Project.deleteMany({
+      createdBy: user._id,
+    });
+
+    await Application.deleteMany({
+      student: user._id,
+    });
+
+    await SavedJob.deleteMany({
+      student: user._id,
+    });
+
+    await Notification.deleteMany({
+      recipient: user._id,
+    });
+
+    // ====================================
+    // If Recruiter
+    // Delete Jobs + Applications
+    // ====================================
+
+    if (user.role === "recruiter") {
+  const recruiterJobs =
+    await Job.find({
+      recruiter: user._id,
+    });
+
+  const recruiterJobIds =
+    recruiterJobs.map(
+      (job) => job._id
+    );
+
+  // Delete applications
+  await Application.deleteMany({
+    job: {
+      $in: recruiterJobIds,
+    },
+  });
+
+  // Delete saved jobs
+  await SavedJob.deleteMany({
+    job: {
+      $in: recruiterJobIds,
+    },
+  });
+
+  // Delete recruiter jobs
+  await Job.deleteMany({
+    recruiter: user._id,
+  });
+}
+
+    // ====================================
+    // Delete User
+    // ====================================
+
     await user.deleteOne();
 
     res.status(200).json({
       success: true,
-      message: "User deleted successfully",
+      message:
+        "User and related data deleted successfully",
     });
   } catch (error) {
     res.status(500).json({
@@ -64,7 +127,10 @@ const deleteUser = async (req, res) => {
 const getAllJobs = async (req, res) => {
   try {
     const jobs = await Job.find()
-      .populate("recruiter", "fullName email");
+      .populate(
+        "recruiter",
+        "fullName email"
+      );
 
     res.status(200).json({
       success: true,
@@ -81,7 +147,7 @@ const getAllJobs = async (req, res) => {
 
 
 // ====================================
-// Delete Job
+// Delete Job + Applications
 // ====================================
 const deleteJob = async (req, res) => {
   try {
@@ -96,11 +162,22 @@ const deleteJob = async (req, res) => {
       });
     }
 
+    // Delete Applications
+    await Application.deleteMany({
+      job: job._id,
+    });
+
+    // Delete Saved Jobs
+    await SavedJob.deleteMany({
+      job: job._id,
+    });
+
     await job.deleteOne();
 
     res.status(200).json({
       success: true,
-      message: "Job deleted successfully",
+      message:
+        "Job and related data deleted successfully",
     });
   } catch (error) {
     res.status(500).json({

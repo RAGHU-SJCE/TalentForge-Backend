@@ -8,6 +8,7 @@ const {
   getJobById,
   updateJob,
   deleteJob,
+  getMyJobs,
 } = require("../controllers/jobController");
 
 const { protect } = require("../middleware/authMiddleware");
@@ -61,6 +62,13 @@ router.post(
   createJob
 );
 
+
+router.get(
+  "/my-jobs",
+  protect,
+  authorizeRoles("recruiter"),
+  getMyJobs
+);
 /**
  * @swagger
  * /api/jobs:

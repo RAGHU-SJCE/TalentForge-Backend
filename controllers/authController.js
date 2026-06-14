@@ -3,40 +3,77 @@ const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const sendEmail = require("../utils/sendEmail");
 
-// Register User
-const registerUser = async (req, res) => {
-  try {
-    const { fullName, email, password, role } = req.body;
 
-    if (!fullName || !email || !password) {
+// =====================================
+// Register User
+// =====================================
+const registerUser = async (
+  req,
+  res
+) => {
+  try {
+    const {
+      fullName,
+      email,
+      password,
+      role,
+    } = req.body;
+
+    if (
+      !fullName ||
+      !email ||
+      !password
+    ) {
       return res.status(400).json({
         success: false,
-        message: "Please fill all required fields",
+        message:
+          "Please fill all required fields",
       });
     }
 
-    const existingUser = await User.findOne({ email });
+    const existingUser =
+      await User.findOne({
+        email,
+      });
 
     if (existingUser) {
       return res.status(400).json({
         success: false,
-        message: "User already exists",
+        message:
+          "User already exists",
       });
     }
 
-    const hashedPassword = await bcrypt.hash(password, 10);
+    const allowedRoles = [
+      "student",
+      "professional",
+      "recruiter",
+    ];
 
-    const user = await User.create({
-      fullName,
-      email,
-      password: hashedPassword,
-      role,
-    });
+    const userRole =
+      allowedRoles.includes(role)
+        ? role
+        : "student";
 
-    // Send Welcome Email
+    const hashedPassword =
+      await bcrypt.hash(
+        password,
+        10
+      );
+
+    const user =
+      await User.create({
+        fullName,
+        email,
+        password:
+          hashedPassword,
+        role: userRole,
+      });
+
     sendEmail({
       to: user.email,
-      subject: "Welcome to TalentForge",
+      subject:
+        "Welcome to TalentForge",
       html: `
         <h2>Welcome ${user.fullName} 🎉</h2>
 
@@ -51,44 +88,64 @@ const registerUser = async (req, res) => {
         <p>Thank you for joining TalentForge.</p>
       `,
     }).catch((err) =>
-      console.log("Email Error:", err.message)
+      console.log(
+        "Email Error:",
+        err.message
+      )
     );
 
     res.status(201).json({
       success: true,
-      message: "User Registered Successfully",
+      message:
+        "User Registered Successfully",
     });
   } catch (error) {
     res.status(500).json({
       success: false,
-      message: error.message,
+      message:
+        error.message,
     });
   }
 };
 
-// Login User
-const loginUser = async (req, res) => {
-  try {
-    const { email, password } = req.body;
 
-    const user = await User.findOne({ email });
+// =====================================
+// Login User
+// =====================================
+const loginUser = async (
+  req,
+  res
+) => {
+  try {
+    const {
+      email,
+      password,
+    } = req.body;
+
+    const user =
+      await User.findOne({
+        email,
+      });
 
     if (!user) {
       return res.status(400).json({
         success: false,
-        message: "User not found",
+        message:
+          "User not found",
       });
     }
 
-    const isMatch = await bcrypt.compare(
-      password,
-      user.password
-    );
+    const isMatch =
+      await bcrypt.compare(
+        password,
+        user.password
+      );
 
     if (!isMatch) {
       return res.status(400).json({
         success: false,
-        message: "Invalid credentials",
+        message:
+          "Invalid credentials",
       });
     }
 
@@ -105,22 +162,28 @@ const loginUser = async (req, res) => {
 
     res.status(200).json({
       success: true,
-      message: "Login Successful",
+      message:
+        "Login Successful",
       token,
       user: {
         id: user._id,
-        fullName: user.fullName,
-        email: user.email,
-        role: user.role,
+        fullName:
+          user.fullName,
+        email:
+          user.email,
+        role:
+          user.role,
       },
     });
   } catch (error) {
     res.status(500).json({
       success: false,
-      message: error.message,
+      message:
+        error.message,
     });
   }
 };
+
 
 module.exports = {
   registerUser,

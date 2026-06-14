@@ -28,15 +28,19 @@ const getNotifications = async (
   }
 };
 
-// Mark Read
+// Mark As Read
 const markAsRead = async (
   req,
   res
 ) => {
   try {
     const notification =
-      await Notification.findByIdAndUpdate(
-        req.params.id,
+      await Notification.findOneAndUpdate(
+        {
+          _id: req.params.id,
+          recipient:
+            req.user.id,
+        },
         {
           isRead: true,
         },
@@ -70,8 +74,12 @@ const deleteNotification =
   async (req, res) => {
     try {
       const notification =
-        await Notification.findByIdAndDelete(
-          req.params.id
+        await Notification.findOneAndDelete(
+          {
+            _id: req.params.id,
+            recipient:
+              req.user.id,
+          }
         );
 
       if (!notification) {
