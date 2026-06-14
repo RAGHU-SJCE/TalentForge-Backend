@@ -38,7 +38,16 @@ const createJob = async (req, res) => {
 // Get All Jobs
 const getAllJobs = async (req, res) => {
   try {
-    const jobs = await Job.find().populate(
+    const { title, company, location, skill } = req.query;
+
+    const query = {};
+
+    if (title) query.title = { $regex: title, $options: "i" };
+    if (company) query.company = { $regex: company, $options: "i" };
+    if (location) query.location = { $regex: location, $options: "i" };
+    if (skill) query.skillsRequired = { $regex: skill, $options: "i" };
+
+    const jobs = await Job.find(query).populate(
       "recruiter",
       "fullName email"
     );

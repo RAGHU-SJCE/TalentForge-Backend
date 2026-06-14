@@ -2,6 +2,7 @@ const User = require("../models/User");
 const Project = require("../models/Project");
 const Job = require("../models/Job");
 const Application = require("../models/Application");
+const Interview = require("../models/Interview");
 
 
 // ===================================
@@ -53,63 +54,66 @@ const getStudentDashboard = async (req, res) => {
 // ===================================
 // Recruiter Dashboard
 // ===================================
-const getRecruiterDashboard = async (
-  req,
-  res
-) => {
+const getRecruiterDashboard = async (req, res) => {
   try {
     const recruiterId = req.user.id;
 
-    const jobs = await Job.find({
-      recruiter: recruiterId,
-    });
-
-    const jobIds = jobs.map(
-      (job) => job._id
-    );
-
+    const jobs = await Job.find({ recruiter: recruiterId });
+    const jobIds = jobs.map((job) => job._id);
     const totalJobsPosted = jobs.length;
 
-    const applicationStats =
-      await Application.aggregate([
-        {
-          $match: {
-            job: {
-              $in: jobIds,
-            },
-          },
-        },
-        {
-          $group: {
-            _id: "$status",
-            count: {
-              $sum: 1,
-            },
-          },
-        },
-      ]);
+    // Fetch all applications for these jobs
+    const applications = await Application.find({ job: { $in: jobIds } }).populate("job", "title");
+    
+    const totalApplicationsReceived = applications.length;
 
-    let totalApplicationsReceived = 0;
+    // Aggregations
     let totalShortlistedCandidates = 0;
+    let totalInterviewedCandidates = 0;
     let totalSelectedCandidates = 0;
+    let totalRejectedCandidates = 0;
 
-    applicationStats.forEach((item) => {
-      totalApplicationsReceived +=
-        item.count;
+    const statusCounts = {};
+    const jobsCountMap = {};
+    const monthlyCounts = {};
 
-      if (
-        item._id === "Shortlisted"
-      ) {
-        totalShortlistedCandidates =
-          item.count;
-      }
+    applications.forEach((app) => {
+      // Status aggregation
+      if (app.status === "Shortlisted") totalShortlistedCandidates++;
+      if (app.status === "Interview") totalInterviewedCandidates++;
+      if (app.status === "Selected") totalSelectedCandidates++;
+      if (app.status === "Rejected") totalRejectedCandidates++;
 
-      if (
-        item._id === "Selected"
-      ) {
-        totalSelectedCandidates =
-          item.count;
-      }
+      statusCounts[app.status] = (statusCounts[app.status] || 0) + 1;
+
+      // Apps per job aggregation
+      const jobTitle = app.job?.title || "Unknown";
+      jobsCountMap[jobTitle] = (jobsCountMap[jobTitle] || 0) + 1;
+
+      // Monthly aggregation
+      const monthYear = new Date(app.createdAt).toLocaleString('default', { month: 'short', year: 'numeric' });
+      monthlyCounts[monthYear] = (monthlyCounts[monthYear] || 0) + 1;
+    });
+
+    const statusDistribution = Object.keys(statusCounts).map(key => ({
+      name: key,
+      value: statusCounts[key]
+    }));
+
+    const applicationsPerJob = Object.keys(jobsCountMap).map(key => ({
+      jobTitle: key,
+      count: jobsCountMap[key]
+    }));
+
+    const monthlyApplications = Object.keys(monthlyCounts).map(key => ({
+      month: key,
+      count: monthlyCounts[key]
+    }));
+
+    // Upcoming Interviews
+    const upcomingInterviews = await Interview.countDocuments({
+      recruiter: recruiterId,
+      status: "Scheduled"
     });
 
     res.status(200).json({
@@ -118,7 +122,13 @@ const getRecruiterDashboard = async (
         totalJobsPosted,
         totalApplicationsReceived,
         totalShortlistedCandidates,
+        totalInterviewedCandidates,
         totalSelectedCandidates,
+        totalRejectedCandidates,
+        upcomingInterviews,
+        statusDistribution,
+        applicationsPerJob,
+        monthlyApplications
       },
     });
   } catch (error) {
