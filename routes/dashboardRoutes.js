@@ -11,6 +11,10 @@ const {
   protect,
 } = require("../middleware/authMiddleware");
 
+const {
+  authorizeRoles,
+} = require("../middleware/roleMiddleware");
+
 /**
  * @swagger
  * tags:
@@ -31,6 +35,7 @@ const {
 router.get(
   "/student",
   protect,
+  authorizeRoles("student"),
   getStudentDashboard
 );
 
@@ -47,6 +52,7 @@ router.get(
 router.get(
   "/recruiter",
   protect,
+  authorizeRoles("recruiter"),
   getRecruiterDashboard
 );
 

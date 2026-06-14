@@ -1,5 +1,6 @@
 const Job = require("../models/Job");
-
+const Application = require("../models/Application");
+const SavedJob = require("../models/SavedJob");
 // Create Job
 const createJob = async (req, res) => {
   try {
@@ -137,6 +138,10 @@ const deleteJob = async (req, res) => {
         message: "Not Authorized",
       });
     }
+
+    // Delete associated applications and saved jobs
+    await Application.deleteMany({ job: job._id });
+    await SavedJob.deleteMany({ job: job._id });
 
     await job.deleteOne();
 

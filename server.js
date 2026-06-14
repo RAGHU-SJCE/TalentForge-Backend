@@ -26,6 +26,9 @@ const companyRoutes = require(
 const adminRoutes = require(
   "./routes/adminRoutes"
 );
+const interviewRoutes = require(
+  "./routes/interviewRoutes"
+);
 
 const app = express();
 
@@ -71,6 +74,10 @@ app.use(
 app.use(
   "/api/admin",
   adminRoutes
+);
+app.use(
+  "/api/interviews",
+  interviewRoutes
 );
 
 const PORT =

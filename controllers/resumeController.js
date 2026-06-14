@@ -1,3 +1,7 @@
+/**
+ * @deprecated This controller is deprecated. Use userController.js instead.
+ * This file will be removed in a future cleanup commit.
+ */
 const User = require("../models/User");
 
 const uploadResume = async (req, res) => {

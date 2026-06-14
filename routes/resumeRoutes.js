@@ -1,3 +1,7 @@
+/**
+ * @deprecated This route is deprecated. Use /api/users/upload-resume instead.
+ * This file will be removed in a future cleanup commit.
+ */
 const express = require("express");
 const router = express.Router();
 
