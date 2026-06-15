@@ -1,6 +1,7 @@
 // utils/sendEmail.js
 
 const nodemailer = require("nodemailer");
+const dns = require("dns");
 
 const sendEmail = async (options) => {
   const transporter = nodemailer.createTransport({
@@ -11,6 +12,10 @@ const sendEmail = async (options) => {
       user: process.env.EMAIL_USER,
       pass: process.env.EMAIL_PASS,
     },
+    // Force IPv4 resolution to prevent ENETUNREACH IPv6 errors in cloud environments
+    lookup: (hostname, opts, callback) => {
+      return dns.lookup(hostname, { family: 4 }, callback);
+    }
   });
 
   await transporter.sendMail({
