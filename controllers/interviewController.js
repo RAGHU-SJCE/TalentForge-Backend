@@ -4,6 +4,7 @@ const User = require("../models/User");
 const Application = require("../models/Application");
 const Notification = require("../models/Notification");
 const sendEmail = require("../utils/sendEmail");
+const socket = require("../socket");
 
 // ===================================
 // Schedule Interview
@@ -63,6 +64,14 @@ const scheduleInterview = async (req, res) => {
       type: "interview",
     });
 
+    const candidateSocketId = socket.getUserSocket(candidateId);
+    if (candidateSocketId) {
+      socket.getIO().to(candidateSocketId).emit("notification", {
+        message: `An interview has been scheduled for the ${job.title} position.`,
+        type: "interview",
+      });
+    }
+
     // Send Email
     sendEmail({
       to: candidate.email,
@@ -117,6 +126,14 @@ const updateInterview = async (req, res) => {
       type: "interview",
     });
 
+    const candidateSocketId = socket.getUserSocket(interview.candidate._id);
+    if (candidateSocketId) {
+      socket.getIO().to(candidateSocketId).emit("notification", {
+        message: `Your interview for ${interview.job.title} has been updated.`,
+        type: "interview",
+      });
+    }
+
     // Send Email
     sendEmail({
       to: interview.candidate.email,
@@ -160,6 +177,14 @@ const cancelInterview = async (req, res) => {
       message: `Your interview for ${interview.job.title} has been cancelled.`,
       type: "interview",
     });
+
+    const candidateSocketId = socket.getUserSocket(interview.candidate._id);
+    if (candidateSocketId) {
+      socket.getIO().to(candidateSocketId).emit("notification", {
+        message: `Your interview for ${interview.job.title} has been cancelled.`,
+        type: "interview",
+      });
+    }
 
     // Send Email
     sendEmail({

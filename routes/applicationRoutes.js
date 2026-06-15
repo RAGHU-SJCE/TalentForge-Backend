@@ -41,7 +41,7 @@ const {
 router.post(
   "/apply/:jobId",
   protect,
-  authorizeRoles("student"),
+  authorizeRoles("student", "professional"),
   applyToJob
 );
 
@@ -58,7 +58,7 @@ router.post(
 router.get(
   "/my-applications",
   protect,
-  authorizeRoles("student"),
+  authorizeRoles("student", "professional"),
   getMyApplications
 );
 

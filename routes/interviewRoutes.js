@@ -19,6 +19,6 @@ router.put("/:id/cancel", protect, authorizeRoles("recruiter"), cancelInterview)
 router.get("/job/:jobId", protect, authorizeRoles("recruiter"), getInterviewsForJob);
 
 // Student routes
-router.get("/student", protect, authorizeRoles("student"), getStudentInterviews);
+router.get("/student", protect, authorizeRoles("student", "professional"), getStudentInterviews);
 
 module.exports = router;

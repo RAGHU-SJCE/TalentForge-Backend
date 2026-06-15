@@ -1,5 +1,7 @@
 const express = require("express");
 const cors = require("cors");
+const http = require("http");
+require("dotenv").config();
 require("dotenv").config();
 
 const swaggerUi = require("swagger-ui-express");
@@ -29,16 +31,31 @@ const adminRoutes = require(
 const interviewRoutes = require(
   "./routes/interviewRoutes"
 );
+const connectionRoutes = require("./routes/connectionRoutes");
+const messageRoutes = require("./routes/messageRoutes");
+const profileViewRoutes = require("./routes/profileViewRoutes");
+const endorsementRoutes = require("./routes/endorsementRoutes");
+const projectStarRoutes = require("./routes/projectStarRoutes");
+const suggestionsRoutes = require("./routes/suggestionsRoutes");
 
 const app = express();
+const server = http.createServer(app);
+
+const socket = require("./socket");
+socket.init(server);
 
 app.use(cors());
 app.use(express.json());
+app.use((req, res, next) => {
+  console.log(`${req.method} ${req.url}`);
+  next();
+});
 
 app.use(
   "/uploads",
   express.static("uploads")
 );
+
 
 // Swagger Documentation
 app.use(
@@ -79,6 +96,12 @@ app.use(
   "/api/interviews",
   interviewRoutes
 );
+app.use("/api/connections", connectionRoutes);
+app.use("/api/messages", messageRoutes);
+app.use("/api/profile-views", profileViewRoutes);
+app.use("/api/endorsements", endorsementRoutes);
+app.use("/api/project-stars", projectStarRoutes);
+app.use("/api/suggestions", suggestionsRoutes);
 
 const PORT =
   process.env.PORT || 5000;
@@ -86,7 +109,7 @@ const PORT =
 const startServer = async () => {
   await connectDB();
 
-  app.listen(PORT, () => {
+  server.listen(PORT, () => {
     console.log(
       `Server running on port ${PORT}`
     );

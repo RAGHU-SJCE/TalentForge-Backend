@@ -42,20 +42,64 @@ const userSchema = new mongoose.Schema(
       default: "",
     },
 
+    experience: {
+      type: String,
+      default: "",
+    },
+
     resume: {
       type: String,
       default: "",
     },
 
     companyName: {
-  type: String,
-  default: "",
-},
+      type: String,
+      default: "",
+    },
+
+    designation: {
+      type: String,
+      default: "",
+    },
+
+    dateOfBirth: {
+      type: Date,
+    },
+
+    location: {
+      type: String,
+      default: "",
+    },
+
+    phone: {
+      type: String,
+      default: "",
+    },
+
+    linkedinUrl: {
+      type: String,
+      default: "",
+    },
+
+    portfolioUrl: {
+      type: String,
+      default: "",
+    },
+
+    education: {
+      type: String,
+      default: "",
+    },
+
+    certifications: {
+      type: [String],
+      default: [],
+    },
 
     companyWebsite: {
-  type: String,
-  default: "",
-},
+      type: String,
+      default: "",
+    },
 
     companyDescription: {
   type: String,
@@ -71,6 +115,14 @@ const userSchema = new mongoose.Schema(
   type: String,
   default: "",
 },
+
+    resetPasswordToken: {
+      type: String,
+    },
+
+    resetPasswordExpire: {
+      type: Date,
+    },
   },
   {
     timestamps: true,

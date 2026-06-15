@@ -103,8 +103,33 @@ const deleteNotification =
     }
   };
 
+// Mark All As Read
+const markAllRead = async (req, res) => {
+  try {
+    await Notification.updateMany(
+      { recipient: req.user.id, isRead: false },
+      { isRead: true }
+    );
+    res.status(200).json({ success: true, message: "All notifications marked as read" });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+// Get Unread Count (for badge)
+const getUnreadCount = async (req, res) => {
+  try {
+    const count = await Notification.countDocuments({ recipient: req.user.id, isRead: false });
+    res.status(200).json({ success: true, count });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
 module.exports = {
   getNotifications,
   markAsRead,
   deleteNotification,
-};
+  markAllRead,
+  getUnreadCount,
+};

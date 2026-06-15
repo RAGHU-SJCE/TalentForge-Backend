@@ -42,7 +42,7 @@ const {
 router.post(
   "/:jobId",
   protect,
-  authorizeRoles("student"),
+  authorizeRoles("student", "professional"),
   saveJob
 );
 
@@ -59,7 +59,7 @@ router.post(
 router.get(
   "/",
   protect,
-  authorizeRoles("student"),
+  authorizeRoles("student", "professional"),
   getSavedJobs
 );
 
@@ -82,7 +82,7 @@ router.get(
 router.delete(
   "/:jobId",
   protect,
-  authorizeRoles("student"),
+  authorizeRoles("student", "professional"),
   unsaveJob
 );
 

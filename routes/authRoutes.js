@@ -1,11 +1,23 @@
 const express = require("express");
+const rateLimit = require("express-rate-limit");
 
 const router = express.Router();
 
 const {
   registerUser,
   loginUser,
+  forgotPassword,
+  resetPassword,
 } = require("../controllers/authController");
+
+const loginLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 5, // Limit each IP to 5 login requests per windowMs
+  message: {
+    success: false,
+    message: "Too many login attempts from this IP, please try again after 15 minutes",
+  },
+});
 
 /**
  * @swagger
@@ -79,6 +91,10 @@ router.post("/register", registerUser);
  *       400:
  *         description: Invalid Credentials
  */
-router.post("/login", loginUser);
+router.post("/login", loginLimiter, loginUser);
+
+router.post("/forgot-password", forgotPassword);
+router.post("/reset-password/:resetToken", resetPassword);
+router.put("/reset-password/:resetToken", resetPassword);
 
 module.exports = router;

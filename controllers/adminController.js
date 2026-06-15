@@ -237,10 +237,58 @@ const getAdminDashboard = async (
   }
 };
 
+// Update User Role
+const updateUserRole = async (req, res) => {
+  try {
+    const { role } = req.body;
+    const allowedRoles = ["student", "professional", "recruiter", "admin"];
+    if (!allowedRoles.includes(role)) {
+      return res.status(400).json({ success: false, message: "Invalid role" });
+    }
+    const user = await User.findByIdAndUpdate(req.params.id, { role }, { new: true }).select("-password");
+    if (!user) return res.status(404).json({ success: false, message: "User not found" });
+    res.status(200).json({ success: true, user });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+// Get All Projects
+const getAllProjects = async (req, res) => {
+  try {
+    const projects = await Project.find()
+      .populate("createdBy", "fullName email");
+    res.status(200).json({
+      success: true,
+      count: projects.length,
+      projects,
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+// Delete Project
+const deleteProject = async (req, res) => {
+  try {
+    const project = await Project.findById(req.params.id);
+    if (!project) {
+      return res.status(404).json({ success: false, message: "Project not found" });
+    }
+    await project.deleteOne();
+    res.status(200).json({ success: true, message: "Project deleted successfully" });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
 module.exports = {
   getAllUsers,
   deleteUser,
   getAllJobs,
   deleteJob,
   getAdminDashboard,
-};
+  updateUserRole,
+  getAllProjects,
+  deleteProject,
+};

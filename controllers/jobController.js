@@ -11,6 +11,11 @@ const createJob = async (req, res) => {
       salary,
       description,
       skillsRequired,
+      employmentType,
+      experienceLevel,
+      responsibilities,
+      benefits,
+      applicationDeadline
     } = req.body;
 
     const job = await Job.create({
@@ -20,6 +25,11 @@ const createJob = async (req, res) => {
       salary,
       description,
       skillsRequired,
+      employmentType,
+      experienceLevel,
+      responsibilities,
+      benefits,
+      applicationDeadline,
       recruiter: req.user.id,
     });
 

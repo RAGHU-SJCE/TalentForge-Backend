@@ -7,15 +7,23 @@ const {
   uploadResume,
   updateSkills,
   updateBio,
+  updateExperience,
   getAllStudents,
   getStudentById,
+  getPublicProfile,
+  updateCompanyDetails,
+  updateAdvancedProfile,
+  uploadProfilePicture,
 } = require("../controllers/userController");
+
 
 const { protect } = require("../middleware/authMiddleware");
 
 const upload = require(
   "../middleware/uploadMiddleware"
 );
+const { uploadProfilePic } = require("../middleware/uploadMiddleware");
+
 
 /**
  * @swagger
@@ -35,6 +43,24 @@ const upload = require(
  *         description: User profile fetched successfully
  */
 router.get("/profile", protect, getProfile);
+
+/**
+ * @swagger
+ * /api/users/{id}/public:
+ *   get:
+ *     summary: Get public profile for a user
+ *     tags: [Users]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Public profile fetched successfully
+ */
+router.get("/:id/public", protect, getPublicProfile);
 
 /**
  * @swagger
@@ -111,6 +137,33 @@ router.put("/skills", protect, updateSkills);
  *         description: Bio updated successfully
  */
 router.put("/bio", protect, updateBio);
+
+/**
+ * @swagger
+ * /api/users/experience:
+ *   put:
+ *     summary: Update user experience
+ *     tags: [Users]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               experience:
+ *                 type: string
+ *                 example: 3 years as Developer
+ *     responses:
+ *       200:
+ *         description: Experience updated successfully
+ */
+router.put("/experience", protect, updateExperience);
+
+router.put("/company", protect, updateCompanyDetails);
+router.put("/advanced", protect, updateAdvancedProfile);
+router.put("/upload-profile-picture", protect, uploadProfilePic.single("profilePicture"), uploadProfilePicture);
+
 
 /**
  * @swagger

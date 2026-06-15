@@ -35,7 +35,7 @@ const {
 router.get(
   "/student",
   protect,
-  authorizeRoles("student"),
+  authorizeRoles("student", "professional"),
   getStudentDashboard
 );
 

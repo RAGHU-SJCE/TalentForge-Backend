@@ -6,13 +6,20 @@ const {
   getNotifications,
   markAsRead,
   deleteNotification,
-} = require(
-  "../controllers/notificationController"
-);
+  markAllRead,
+  getUnreadCount,
+} = require("../controllers/notificationController");
 
-const {
-  protect,
-} = require("../middleware/authMiddleware");
+const { protect } = require("../middleware/authMiddleware");
+
+router.get("/", protect, getNotifications);
+router.get("/unread-count", protect, getUnreadCount);
+router.put("/mark-all-read", protect, markAllRead);
+router.put("/:id/read", protect, markAsRead);
+router.delete("/:id", protect, deleteNotification);
+
+module.exports = router;
+
 
 /**
  * @swagger

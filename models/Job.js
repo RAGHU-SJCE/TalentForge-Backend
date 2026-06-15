@@ -35,6 +35,32 @@ const jobSchema = new mongoose.Schema(
       default: [],
     },
 
+    employmentType: {
+      type: String,
+      enum: ["Full-time", "Part-time", "Contract", "Internship"],
+      default: "Full-time",
+    },
+
+    experienceLevel: {
+      type: String,
+      enum: ["Entry", "Mid", "Senior", "Lead"],
+      default: "Entry",
+    },
+
+    responsibilities: {
+      type: [String],
+      default: [],
+    },
+
+    benefits: {
+      type: [String],
+      default: [],
+    },
+
+    applicationDeadline: {
+      type: Date,
+    },
+
     recruiter: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",

@@ -8,7 +8,11 @@ const {
   getAllJobs,
   deleteJob,
   getAdminDashboard,
+  updateUserRole,
+  getAllProjects,
+  deleteProject,
 } = require("../controllers/adminController");
+
 
 const {
   protect,
@@ -82,6 +86,15 @@ router.delete(
   deleteUser
 );
 
+router.put(
+  "/users/:id/role",
+  protect,
+  authorizeRoles("admin"),
+  updateUserRole
+);
+
+
+
 /**
  * @swagger
  * /api/admin/jobs:
@@ -120,6 +133,20 @@ router.delete(
   protect,
   authorizeRoles("admin"),
   deleteJob
+);
+
+router.get(
+  "/projects",
+  protect,
+  authorizeRoles("admin"),
+  getAllProjects
+);
+
+router.delete(
+  "/projects/:id",
+  protect,
+  authorizeRoles("admin"),
+  deleteProject
 );
 
 module.exports = router;

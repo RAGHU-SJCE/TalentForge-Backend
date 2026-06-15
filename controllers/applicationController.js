@@ -3,6 +3,7 @@ const User = require("../models/User");
 const Job = require("../models/Job");
 const Notification = require("../models/Notification");
 const sendEmail = require("../utils/sendEmail");
+const socket = require("../socket");
 
 // =====================================
 // Student - Apply to Job
@@ -64,6 +65,14 @@ const applyToJob = async (req, res) => {
       message: `${student.fullName} applied for ${job.title}`,
       type: "application",
     });
+
+    const recruiterSocketId = socket.getUserSocket(job.recruiter);
+    if (recruiterSocketId) {
+      socket.getIO().to(recruiterSocketId).emit("notification", {
+        message: `${student.fullName} applied for ${job.title}`,
+        type: "application",
+      });
+    }
 
     // Get Recruiter Details
     const recruiter = await User.findById(
@@ -193,13 +202,33 @@ const getApplicantsForJob = async (
         )
         .populate(
           "job",
-          "title company"
+          "title company skillsRequired"
         );
+
+    const jobSkills = job.skillsRequired.map(s => s.toLowerCase().trim());
+
+    const applicationsWithMatch = applications.map(app => {
+      const studentSkills = app.student?.skills ? app.student.skills.map(s => s.toLowerCase().trim()) : [];
+      let matchCount = 0;
+      
+      jobSkills.forEach(skill => {
+        if (studentSkills.includes(skill)) {
+          matchCount++;
+        }
+      });
+
+      const matchPercentage = jobSkills.length > 0 ? Math.round((matchCount / jobSkills.length) * 100) : 100;
+
+      return {
+        ...app.toObject(),
+        matchPercentage
+      };
+    });
 
     res.status(200).json({
       success: true,
-      count: applications.length,
-      applications,
+      count: applicationsWithMatch.length,
+      applications: applicationsWithMatch,
     });
   } catch (error) {
     res.status(500).json({
@@ -290,10 +319,18 @@ const updateApplicationStatus =
       // Notification for Student
       await Notification.create({
         recipient:
-          application.student,
+          application.student._id,
         message: `Your application for ${application.job.title} has been ${status}`,
         type: notificationType,
       });
+
+      const studentSocketId = socket.getUserSocket(application.student._id);
+      if (studentSocketId) {
+        socket.getIO().to(studentSocketId).emit("notification", {
+          message: `Your application for ${application.job.title} has been ${status}`,
+          type: notificationType,
+        });
+      }
 
       // Email Student On Status Change
       let emailSubject =

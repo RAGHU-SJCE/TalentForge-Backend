@@ -33,6 +33,54 @@ const getStudentDashboard = async (req, res) => {
         .sort({ createdAt: -1 })
         .limit(5);
 
+    // Profile Completion Algorithm
+    let profileCompletionPercentage = 0;
+    const missingProfileActions = [];
+
+    if (user.resume) {
+      profileCompletionPercentage += 25;
+    } else {
+      missingProfileActions.push("Upload your resume");
+    }
+
+    if (skillsCount > 0) {
+      profileCompletionPercentage += 25;
+    } else {
+      missingProfileActions.push("Add your skills");
+    }
+
+    if (user.bio) {
+      profileCompletionPercentage += 15;
+    } else {
+      missingProfileActions.push("Add a bio to your profile");
+    }
+
+    if (totalProjects > 0) {
+      profileCompletionPercentage += 20;
+    } else {
+      missingProfileActions.push("Add a project");
+    }
+
+    if (user.profilePicture) {
+      profileCompletionPercentage += 15;
+    } else {
+      missingProfileActions.push("Upload a profile picture");
+    }
+
+    const profileCompletion = {
+      percentage: profileCompletionPercentage,
+      missingActions: missingProfileActions
+    };
+
+    // Fetch next upcoming interview
+    const nextInterview = await Interview.findOne({
+      candidate: studentId,
+      status: "Scheduled",
+      interviewDate: { $gte: new Date() }
+    })
+      .populate("job", "title company")
+      .sort({ interviewDate: 1 });
+
     res.status(200).json({
       success: true,
       dashboard: {
@@ -40,6 +88,8 @@ const getStudentDashboard = async (req, res) => {
         totalApplications,
         skillsCount,
         recentApplications,
+        profileCompletion,
+        nextInterview,
       },
     });
   } catch (error) {
@@ -63,7 +113,9 @@ const getRecruiterDashboard = async (req, res) => {
     const totalJobsPosted = jobs.length;
 
     // Fetch all applications for these jobs
-    const applications = await Application.find({ job: { $in: jobIds } }).populate("job", "title");
+    const applications = await Application.find({ job: { $in: jobIds } })
+      .populate("job", "title skillsRequired")
+      .populate("student", "fullName email skills profilePicture");
     
     const totalApplicationsReceived = applications.length;
 
@@ -76,6 +128,9 @@ const getRecruiterDashboard = async (req, res) => {
     const statusCounts = {};
     const jobsCountMap = {};
     const monthlyCounts = {};
+
+    let totalMatchScore = 0;
+    let bestCandidate = null;
 
     applications.forEach((app) => {
       // Status aggregation
@@ -93,7 +148,32 @@ const getRecruiterDashboard = async (req, res) => {
       // Monthly aggregation
       const monthYear = new Date(app.createdAt).toLocaleString('default', { month: 'short', year: 'numeric' });
       monthlyCounts[monthYear] = (monthlyCounts[monthYear] || 0) + 1;
+
+      // Algorithmic Match Score Calculation
+      let matchCount = 0;
+      const jobSkills = app.job?.skillsRequired ? app.job.skillsRequired.map(s => s.toLowerCase().trim()) : [];
+      const studentSkills = app.student?.skills ? app.student.skills.map(s => s.toLowerCase().trim()) : [];
+
+      jobSkills.forEach(skill => {
+        if (studentSkills.includes(skill)) matchCount++;
+      });
+
+      const matchPercentage = jobSkills.length > 0 ? Math.round((matchCount / jobSkills.length) * 100) : 100;
+      totalMatchScore += matchPercentage;
+
+      if (!bestCandidate || matchPercentage > bestCandidate.matchPercentage) {
+        bestCandidate = {
+          student: app.student,
+          job: app.job,
+          matchPercentage,
+          applicationId: app._id
+        };
+      }
     });
+
+    const averageMatchScore = totalApplicationsReceived > 0 
+      ? Math.round(totalMatchScore / totalApplicationsReceived) 
+      : 0;
 
     const statusDistribution = Object.keys(statusCounts).map(key => ({
       name: key,
@@ -111,10 +191,14 @@ const getRecruiterDashboard = async (req, res) => {
     }));
 
     // Upcoming Interviews
-    const upcomingInterviews = await Interview.countDocuments({
+    const upcomingInterviews = await Interview.find({
       recruiter: recruiterId,
       status: "Scheduled"
-    });
+    })
+      .populate("candidate", "fullName email")
+      .populate("job", "title")
+      .sort({ interviewDate: 1 })
+      .limit(5);
 
     res.status(200).json({
       success: true,
@@ -125,10 +209,12 @@ const getRecruiterDashboard = async (req, res) => {
         totalInterviewedCandidates,
         totalSelectedCandidates,
         totalRejectedCandidates,
-        upcomingInterviews,
+        upcomingInterviews, // Now an array of objects
         statusDistribution,
         applicationsPerJob,
-        monthlyApplications
+        monthlyApplications,
+        averageMatchScore,
+        bestCandidate
       },
     });
   } catch (error) {
